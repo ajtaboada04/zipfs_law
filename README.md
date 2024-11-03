@@ -1,7 +1,7 @@
-Run using 
+### How to run
 
-mkdir build
-cd build
-cmake ..
-cmake --build .
+- mkdir build
+- cd build
+- cmake ..
+- cmake --build .
 
