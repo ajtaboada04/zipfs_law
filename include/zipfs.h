@@ -5,6 +5,7 @@
 #include <sstream>
 #include <map>
 #include <set>
+#include <algorithm>
 
 
 namespace zipfs {
@@ -90,22 +91,134 @@ std::multimap<int, std::string> sortFrequencies(const std::map<std::string, int>
     return sortedFrequencies;
 };
 
+
 /*@brief
-    * Output the contents of the multiple map to a file in format "rank freq word"
-    * @param frequencies: a multimap with the words sorted by frequency
-    * @param fileName: the name of the file to write
-    * @return void
+    * Output the ranked frequencies of words to a file
+    * @param sortedFrequencies: a multimap with the words sorted by frequency
+    * @param outputFileName: the name of the output file to write the results
 */
 
-void outputFrequencies(const std::multimap<int, std::string> &frequencies, std::string fileName){
-    std::ofstream file(fileName);
-    if (file.is_open()) {
-        int rank = 1;
-        for (auto it = frequencies.rbegin(); it != frequencies.rend(); it++) {
-            file << rank << " " << it->first << " " << it->second << std::endl;
-            rank++;
+void outputRankedFrequencies(const std::multimap<int, std::string> &sortedFrequencies, const std::string &outputFileName) {
+    std::ofstream outFile(outputFileName);
+    if (!outFile.is_open()) {
+        std::cerr << "Failed to open file: " << outputFileName << std::endl;
+        return;
+    }
+
+    int rank = 1; 
+    // Reverse iterate so highest frequency comes first
+    for (auto it = sortedFrequencies.rbegin(); it != sortedFrequencies.rend(); ++it) {
+        outFile << rank << " " << it->first << " " << it->second << std::endl;
+        rank++;
+    }
+
+    outFile.close();
+}
+
+// Session 19
+
+/*@brief
+    * Compute the frequency of each word in the book
+    * @param book: a vector of characters representing the book
+    * @return a vector of pairs with each word and its frequency
+*/
+std::vector<std::pair<std::string, int>> computeWordFrequency19(const std::vector<char> &book) {
+    std::vector<std::pair<std::string, int>> wordFrequencies;
+    std::string word;
+    std::stringstream ss;
+
+    // Process each character in the book
+    for (char c : book) {
+        ss << (std::isalpha(c) ? std::tolower(c) : ' ');
+
+        // Extract words and update frequency count
+        while (ss >> word) {
+            // Check if the word already exists in wordFrequencies
+            auto it = std::find_if(wordFrequencies.begin(), wordFrequencies.end(),
+                                   [&word](const std::pair<std::string, int>& p) {
+                                       return p.first == word;
+                                   });
+
+            if (it != wordFrequencies.end()) {
+                // Increment the frequency if the word exists
+                it->second++;
+            } else {
+                // Add a new word with a frequency of 1
+                wordFrequencies.emplace_back(word, 1);
+            }
         }
     }
-};
+    return wordFrequencies;
+}
+
+/*@brief
+    * Count the number of unique words in the book
+    * @param book: a vector of characters representing the book
+    * @return the number of unique words in the book
+*/
+int countUniqueWords19(const std::vector<char>& book) {
+    std::vector<std::string> uniqueWords;
+    std::stringstream ss;
+    std::string word;
+
+    // Process each character in the book
+    for (char c : book) {
+        ss << (std::isalpha(c) ? std::tolower(c) : ' ');
+    }
+
+    // Extract words and check uniqueness
+    while (ss >> word) {
+        // Check if the word already exists in uniqueWords
+        if (std::find(uniqueWords.begin(), uniqueWords.end(), word) == uniqueWords.end()) {
+            uniqueWords.push_back(word); // Add word if it's not already present
+        }
+    }
+
+    return uniqueWords.size();
+}
+
+/*@brief
+    * Sort the words by frequency
+    * @param frequencies: a vector of pairs with each word and its frequency
+    * @return a vector of pairs with the words sorted by frequency
+*/
+std::vector<std::pair<int, std::string>> sortFrequencies19(const std::vector<std::pair<std::string, int>> &frequencies) {
+    std::vector<std::pair<int, std::string>> sortedFrequencies;
+
+    // Convert each frequency pair from (word, frequency) to (frequency, word)
+    for (const auto &pair : frequencies) {
+        sortedFrequencies.emplace_back(pair.second, pair.first);
+    }
+
+    // Sort the vector by frequency in ascending order
+    std::sort(sortedFrequencies.begin(), sortedFrequencies.end(),
+              [](const std::pair<int, std::string> &a, const std::pair<int, std::string> &b) {
+                  return a.first < b.first;
+              });
+
+    return sortedFrequencies;
+}
+
+/*@brief
+    * Output the words sorted by frequency to a file with ranks
+    * @param sortedFrequencies: a vector of pairs with frequencies and words sorted by frequency
+    * @param outputFileName: the name of the output file
+*/
+void outputRankedFrequencies19(const std::vector<std::pair<int, std::string>> &sortedFrequencies, const std::string &outputFileName) {
+    std::ofstream outFile(outputFileName);
+    if (!outFile.is_open()) {
+        std::cerr << "Failed to open file: " << outputFileName << std::endl;
+        return;
+    }
+
+    int rank = 1; 
+    // Iterate from beginning to end (assuming sorted in descending order)
+    for (const auto &pair : sortedFrequencies) {
+        outFile << rank << " " << pair.first << " " << pair.second << std::endl;
+        rank++;
+    }
+
+    outFile.close();
+}
 
 }
